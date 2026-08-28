@@ -3,14 +3,11 @@ window.addEventListener('DOMContentLoaded', () => {
     let trained = false;
     let totalImagesLoaded = 0;
 
-    // CORE FIX: Switched layout type to a pre-defined vector mapping template
-    // This forces the constructor to accept custom array sizes instead of forcing the default [10] boundary
     const options = {
         task: 'classification',
         debug: true
     };
     
-    // Initialize the neural network structure directly
     brain = ml5.neuralNetwork(options);
     
     console.log('Base Neural Network Initialized!');
@@ -45,8 +42,6 @@ window.addEventListener('DOMContentLoaded', () => {
                 const imgData = ctx.getImageData(0, 0, 64, 64).data;
                 const pixelArray = Array.from(imgData).map(val => val / 255); 
 
-                // CORE FIX: Use named object properties ('xs' and 'ys') instead of flat arrays
-                // This structure allows ml5 to dynamically map custom pixel dimensions safely
                 const dataInputs = {};
                 pixelArray.forEach((val, i) => {
                     dataInputs[`pixel_${i}`] = val;
@@ -84,11 +79,8 @@ window.addEventListener('DOMContentLoaded', () => {
             }
             
             document.getElementById('trainStatus').innerText = "Training... please wait.";
-            
-            // Finalize structural bounds scaling
             brain.normalizeData();
             
-            // Execute training over explicit iteration cycles
             const trainingOptions = { epochs: 30 };
             brain.train(trainingOptions, whileTraining, finishedTraining);
         } catch (error) {
@@ -107,11 +99,11 @@ window.addEventListener('DOMContentLoaded', () => {
         trained = true;
     }
 
-    // Preview the test target image
+    // FIX: Preview the test image with strict target file checking to prevent 118 crashes
     let testImgElement = null;
     document.getElementById('testLoader').addEventListener('change', (e) => {
-        if (e.target.files && e.target.files.length > 0) {
-            const file = e.target.files;
+        if (e.target.value && e.target.files && e.target.files.length > 0) {
+            const file = e.target.files[0]; // Fetch the singular targeted item cleanly
             const previewDiv = document.getElementById('imagePreview');
             previewDiv.innerHTML = '';
             testImgElement = document.createElement('img');
@@ -140,18 +132,20 @@ window.addEventListener('DOMContentLoaded', () => {
         const imgData = ctx.getImageData(0, 0, 64, 64).data;
         const testPixelArray = Array.from(imgData).map(val => val / 255);
 
-        // Reconstruct the same dictionary naming model schema for our testing image
         const testInputs = {};
         testPixelArray.forEach((val, i) => {
             testInputs[`pixel_${i}`] = val;
         });
 
-        // Run the prediction loop on the dynamic keys object
+        // Run the prediction loop
         brain.classify(testInputs, (err, results) => {
             if (err) {
                 console.error(err);
                 return;
             }
+            console.log(results); // Keeps log arrays viewable for diagnostics
+            
+            // FIX: Modern ml5 layouts pass results as a clean array sorted by confidence
             if (results && results.length > 0) {
                 const topResult = results[0]; // Isolate highest match configuration
                 document.getElementById('result').innerText = `Result: ${topResult.label} (${Math.round(topResult.confidence * 100)}% sure)`;
