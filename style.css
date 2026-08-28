@@ -69,3 +69,39 @@ button:hover {
     border-radius: 8px;
     margin-top: 1rem;
 }
+
+/* New style additions for feedback and saves */
+.feedback-text {
+    font-size: 0.9rem;
+    color: #55721a;
+    font-weight: bold;
+    margin: 0.5rem 0;
+    text-align: center;
+    background: rgba(107, 142, 35, 0.1);
+    padding: 0.4rem;
+    border-radius: 6px;
+}
+
+.backup-zone {
+    border: 1px dashed var(--accent);
+    background: #fafcfb;
+}
+
+.small-text {
+    font-size: 0.8rem;
+    color: #666;
+    margin-top: -0.5rem;
+    margin-bottom: 1rem;
+}
+
+.button-row {
+    display: flex;
+    gap: 1rem;
+}
+
+.secondary-btn {
+    background: #6c757d;
+}
+.secondary-btn:hover {
+    background: #5a6268;
+}

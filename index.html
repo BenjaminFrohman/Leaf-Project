@@ -17,6 +17,10 @@
             <h2>1. Feed the Dataset</h2>
             <input type="text" id="labelInput" placeholder="Leaf label (e.g., Maple)">
             <input type="file" id="imageLoader" accept="image/*" multiple>
+            
+            <!-- Real-time feedback container -->
+            <div id="loadingFeedback" class="feedback-text">Images loaded: 0</div>
+            
             <button id="addImagesBtn">Add to Brain</button>
             <button id="trainBtn" class="special">Train Model</button>
             <p id="trainStatus">Status: Awaiting data...</p>
@@ -29,6 +33,16 @@
             <div id="imagePreview"></div>
             <button id="predictBtn">Identify</button>
             <h3 id="result">Result: Unknown</h3>
+        </section>
+
+        <!-- Section C: Save & Load Brain Progress -->
+        <section class="card backup-zone">
+            <h2>📦 Save / Load Your Brain</h2>
+            <p class="small-text">Download your trained model or resume a saved session.</p>
+            <div class="button-row">
+                <button id="saveModelBtn" class="secondary-btn">Download Brain</button>
+                <button id="loadModelBtn" class="secondary-btn">Upload Brain</button>
+            </div>
         </section>
     </main>
 
