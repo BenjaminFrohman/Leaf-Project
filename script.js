@@ -1,17 +1,14 @@
 // Wrap everything to ensure the webpage is 100% loaded first
 window.addEventListener('DOMContentLoaded', () => {
-    let featureExtractor;
-    let classifier;
+    let classifier; // In v1.4.0, the extractor itself handles everything
     let trained = false;
     let totalImagesLoaded = 0;
 
-    // Initialize ML5 Feature Extractor with MobileNet
-    featureExtractor = ml5.featureExtractor('MobileNet', modelReady);
+    // Initialize ML5 Feature Extractor directly
+    classifier = ml5.featureExtractor('MobileNet', modelReady);
 
     function modelReady() {
         console.log('Base MobileNet Model Loaded!');
-        // FIX: Updated from .classification() to .classifier() to match current ml5.js syntax
-        classifier = featureExtractor.classifier();
         document.getElementById('trainStatus').innerText = "Status: Ready for dataset.";
     }
 
@@ -28,7 +25,6 @@ window.addEventListener('DOMContentLoaded', () => {
         const filesArray = Array.from(fileInput.files);
         let sessionCount = 0;
 
-        // Provide instant visual confirmation that the button was clicked
         document.getElementById('loadingFeedback').innerText = `Processing ${filesArray.length} images... please wait...`;
 
         filesArray.forEach(file => {
@@ -36,6 +32,7 @@ window.addEventListener('DOMContentLoaded', () => {
             img.src = URL.createObjectURL(file);
             
             img.onload = () => {
+                // In v1.4.0, addImage is called directly on the featureExtractor instance
                 classifier.addImage(img, label, () => {
                     totalImagesLoaded++;
                     sessionCount++;
@@ -92,7 +89,9 @@ window.addEventListener('DOMContentLoaded', () => {
                 console.error(err);
                 return;
             }
-            document.getElementById('result').innerText = `Result: ${results.label} (${Math.round(results.confidence * 100)}% sure)`;
+            // v1.4.0 outputs classification arrays natively
+            const topResult = results[0];
+            document.getElementById('result').innerText = `Result: ${topResult.label} (${Math.round(topResult.confidence * 100)}% sure)`;
         });
     });
 
