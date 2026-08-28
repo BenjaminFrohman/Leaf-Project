@@ -12,11 +12,8 @@ window.addEventListener('DOMContentLoaded', () => {
     // Spin up the core neural network brain directly
     brain = ml5.neuralNetwork(options);
     
-    // Simulating immediate readiness for data input
-    setTimeout(() => {
-        console.log('Base MobileNet Model Loaded!');
-        document.getElementById('trainStatus').innerText = "Status: Ready for dataset.";
-    }, 1000);
+    console.log('Base MobileNet Model Loaded!');
+    document.getElementById('trainStatus').innerText = "Status: Ready for dataset.";
 
     // 1. Handling dataset input
     document.getElementById('addImagesBtn').addEventListener('click', () => {
@@ -38,18 +35,15 @@ window.addEventListener('DOMContentLoaded', () => {
             img.src = URL.createObjectURL(file);
             
             img.onload = () => {
-                // Safely convert image to a flat color pixel matrix for the next-gen neural net
                 const canvas = document.createElement('canvas');
                 const ctx = canvas.getContext('2d');
-                canvas.width = 64;  // Standardizing structural resolution limits
+                canvas.width = 64;  
                 canvas.height = 64;
                 ctx.drawImage(img, 0, 0, 64, 64);
                 
-                // Pull raw color values (Red, Green, Blue, Alpha) out of the canvas bounding box
                 const imgData = ctx.getImageData(0, 0, 64, 64).data;
-                const pixelArray = Array.from(imgData).map(val => val / 255); // Normalize structural bounds
+                const pixelArray = Array.from(imgData).map(val => val / 255); 
 
-                // Map data array cleanly to the network training matrix
                 brain.addData({ x: pixelArray }, { y: label });
                 
                 totalImagesLoaded++;
@@ -63,16 +57,30 @@ window.addEventListener('DOMContentLoaded', () => {
         fileInput.value = '';
     });
 
-    // 2. Training the neural network
-    document.getElementById('trainBtn').addEventListener('click', () => {
-        document.getElementById('trainStatus').innerText = "Training... please wait.";
+    // 2. Training the neural network (UPDATED FOR WEBGPU INITIALIZATION ASYNC)
+    document.getElementById('trainBtn').addEventListener('click', async () => {
+        document.getElementById('trainStatus').innerText = "Initializing engine... please wait.";
         
-        // Finalize structural bounds scaling
-        brain.normalizeData();
-        
-        // Execute the next-gen processing configuration
-        const trainingOptions = { epochs: 30 };
-        brain.train(trainingOptions, whileTraining, finishedTraining);
+        try {
+            // FIX: Force the background math engine to finish booting up before we try to touch it
+            if (ml5.tf && ml5.tf.ready) {
+                await ml5.tf.ready();
+            }
+            
+            document.getElementById('trainStatus').innerText = "Training... please wait.";
+            
+            // Finalize structural bounds scaling
+            brain.normalizeData();
+            
+            // Execute the next-gen processing configuration
+            const trainingOptions = { epochs: 30 };
+            brain.train(trainingOptions, whileTraining, finishedTraining);
+        } catch (error) {
+            console.error("Training engine error, attempting fallback...", error);
+            // Fallback attempt if WebGPU acts up
+            brain.normalizeData();
+            brain.train({ epochs: 30 }, whileTraining, finishedTraining);
+        }
     });
 
     function whileTraining(epoch, loss) {
@@ -108,7 +116,6 @@ window.addEventListener('DOMContentLoaded', () => {
             return;
         }
 
-        // Convert the test leaf to the exact same matrix format
         const canvas = document.createElement('canvas');
         const ctx = canvas.getContext('2d');
         canvas.width = 64;
