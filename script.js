@@ -3,11 +3,11 @@ window.addEventListener('DOMContentLoaded', () => {
     let trained = false;
     let totalImagesLoaded = 0;
 
-    // FIX: Define the explicit flat input array size number directly
-    // 64 width * 64 height * 4 color channels = 16384 unique values
+    // CORE FIX: Configured the inputs property explicitly as an array containing resolution sizes
+    // This instructs the ml5 data structure to cleanly register the image grid layout parameters
     const options = {
-        task: 'classification',
-        inputs: 16384, 
+        task: 'imageClassification',
+        inputs: [64, 64, 4], 
         outputs: ['label'],
         debug: true
     };
@@ -47,8 +47,8 @@ window.addEventListener('DOMContentLoaded', () => {
                 const imgData = ctx.getImageData(0, 0, 64, 64).data;
                 const pixelArray = Array.from(imgData).map(val => val / 255); 
 
-                // FIX: Map the flat data array cleanly into standard key-value layout blocks
-                brain.addData({ x: pixelArray }, { y: label });
+                // Map data properties correctly within the structural canvas array definition
+                brain.addData({ image: pixelArray }, { label: label });
                 
                 totalImagesLoaded++;
                 sessionCount++;
@@ -132,14 +132,14 @@ window.addEventListener('DOMContentLoaded', () => {
         const imgData = ctx.getImageData(0, 0, 64, 64).data;
         const testPixelArray = Array.from(imgData).map(val => val / 255);
 
-        // Run the prediction
-        brain.classify({ x: testPixelArray }, (err, results) => {
+        // Run the prediction on the verified structural property matrix
+        brain.classify({ image: testPixelArray }, (err, results) => {
             if (err) {
                 console.error(err);
                 return;
             }
             if (results && results.length > 0) {
-                const topResult = results[0]; // Isolate highest match configuration
+                const topResult = results; 
                 document.getElementById('result').innerText = `Result: ${topResult.label} (${Math.round(topResult.confidence * 100)}% sure)`;
             }
         });
