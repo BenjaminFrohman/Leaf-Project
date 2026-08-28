@@ -3,29 +3,13 @@ window.addEventListener('DOMContentLoaded', () => {
     let trained = false;
     let totalImagesLoaded = 0;
 
-    // FIX: Define explicit architectural layers for custom vector sizes
+    // Configuration properties optimized to process our flat 64x64 color pixels matrix
     const options = {
         task: 'classification',
-        debug: true,
-        layers: [
-            {
-                type: 'dense',
-                units: 16384, // Input layer dimensions matching our 64x64x4 pixel grid
-                activation: 'relu'
-            },
-            {
-                type: 'dense',
-                units: 64,    // Hidden layer to compress spatial trends
-                activation: 'relu'
-            },
-            {
-                type: 'dense',  // Output layer dynamically built by ml5.js definitions
-                activation: 'softmax'
-            }
-        ]
+        debug: true
     };
     
-    // Create the neural network instance with the pre-defined layers
+    // Initialize the neural network structure directly
     brain = ml5.neuralNetwork(options);
     
     console.log('Base Neural Network Initialized!');
@@ -60,8 +44,8 @@ window.addEventListener('DOMContentLoaded', () => {
                 const imgData = ctx.getImageData(0, 0, 64, 64).data;
                 const pixelArray = Array.from(imgData).map(val => val / 255); 
 
-                // Feed directly as a single flat array object
-                brain.addData({ input: pixelArray }, { output: label });
+                // Pass the image pixel array data directly to our network container
+                brain.addData([pixelArray], [label]);
                 
                 totalImagesLoaded++;
                 sessionCount++;
@@ -91,7 +75,7 @@ window.addEventListener('DOMContentLoaded', () => {
             document.getElementById('trainStatus').innerText = "Training... please wait.";
             brain.normalizeData();
             
-            const trainingOptions = { epochs: 30, batchSize: 4 };
+            const trainingOptions = { epochs: 30 };
             brain.train(trainingOptions, whileTraining, finishedTraining);
         } catch (error) {
             console.error("Training engine error, attempting fallback...", error);
@@ -109,11 +93,11 @@ window.addEventListener('DOMContentLoaded', () => {
         trained = true;
     }
 
-    // Preview the test image
+    // Preview the test target image
     let testImgElement = null;
     document.getElementById('testLoader').addEventListener('change', (e) => {
         if (e.target.files && e.target.files.length > 0) {
-            const file = e.target.files[0];
+            const file = e.target.files;
             const previewDiv = document.getElementById('imagePreview');
             previewDiv.innerHTML = '';
             testImgElement = document.createElement('img');
@@ -142,20 +126,20 @@ window.addEventListener('DOMContentLoaded', () => {
         const imgData = ctx.getImageData(0, 0, 64, 64).data;
         const testPixelArray = Array.from(imgData).map(val => val / 255);
 
-        // Run the prediction
-        brain.classify({ input: testPixelArray }, (err, results) => {
+        // Run the prediction loop on the processed pixel values matrix
+        brain.classify([testPixelArray], (err, results) => {
             if (err) {
                 console.error(err);
                 return;
             }
             if (results && results.length > 0) {
-                const topResult = results[0]; // Isolate highest match configuration
+                const topResult = results; 
                 document.getElementById('result').innerText = `Result: ${topResult.label} (${Math.round(topResult.confidence * 100)}% sure)`;
             }
         });
     });
 
-    // 4. Save progress
+    // 4. Save progress configurations
     document.getElementById('saveModelBtn').addEventListener('click', () => {
         if (!trained) {
             alert("Train your model before trying to save it!");
@@ -164,7 +148,7 @@ window.addEventListener('DOMContentLoaded', () => {
         brain.save(); 
     });
 
-    // 5. Restore session
+    // 5. Restore session settings
     document.getElementById('loadModelBtn').addEventListener('click', () => {
         brain.load(null, () => {
             document.getElementById('trainStatus').innerText = "Saved brain successfully loaded! Ready to test.";
