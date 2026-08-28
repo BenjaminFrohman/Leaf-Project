@@ -87,7 +87,7 @@ window.addEventListener('DOMContentLoaded', () => {
         } catch (error) {
             console.error("Training engine error, attempting fallback...", error);
             brain.normalizeData();
-            brain.train({ epochs: 30 }, whileTraining, finishedTraining);
+            brain.train({ epochs: 250 }, whileTraining, finishedTraining);
         }
     });
 
