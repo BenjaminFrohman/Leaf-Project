@@ -1,14 +1,17 @@
 // Wrap everything to ensure the webpage is 100% loaded first
 window.addEventListener('DOMContentLoaded', () => {
-    let classifier; // In v1.4.0, the extractor itself handles everything
+    let featureExtractor;
+    let classifier; // This will hold our actual custom image manager
     let trained = false;
     let totalImagesLoaded = 0;
 
-    // Initialize ML5 Feature Extractor directly
-    classifier = ml5.featureExtractor('MobileNet', modelReady);
+    // Initialize the base ML5 Feature Extractor utility
+    featureExtractor = ml5.featureExtractor('MobileNet', modelReady);
 
     function modelReady() {
         console.log('Base MobileNet Model Loaded!');
+        // Securely spin up the sub-module for user image classification
+        classifier = featureExtractor.classification();
         document.getElementById('trainStatus').innerText = "Status: Ready for dataset.";
     }
 
@@ -32,7 +35,7 @@ window.addEventListener('DOMContentLoaded', () => {
             img.src = URL.createObjectURL(file);
             
             img.onload = () => {
-                // In v1.4.0, addImage is called directly on the featureExtractor instance
+                // Call addImage on the active classification module
                 classifier.addImage(img, label, () => {
                     totalImagesLoaded++;
                     sessionCount++;
@@ -89,9 +92,13 @@ window.addEventListener('DOMContentLoaded', () => {
                 console.error(err);
                 return;
             }
-            // v1.4.0 outputs classification arrays natively
-            const topResult = results[0];
-            document.getElementById('result').innerText = `Result: ${topResult.label} (${Math.round(topResult.confidence * 100)}% sure)`;
+            // Parse individual classification responses cleanly
+            if (results && results.length > 0) {
+                const topResult = results[0];
+                document.getElementById('result').innerText = `Result: ${topResult.label} (${Math.round(topResult.confidence * 100)}% sure)`;
+            } else if (results && results.label) {
+                document.getElementById('result').innerText = `Result: ${results.label} (${Math.round(results.confidence * 100)}% sure)`;
+            }
         });
     });
 
