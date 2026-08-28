@@ -7,7 +7,7 @@ window.addEventListener('DOMContentLoaded', () => {
     // 64 width * 64 height * 4 color channels (Red, Green, Blue, Alpha) = 16384 inputs
     const options = {
         task: 'classification',
-        inputs:, 
+        inputs: 16384, 
         outputs: ['label'],
         debug: true
     };
