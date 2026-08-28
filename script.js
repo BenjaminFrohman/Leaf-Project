@@ -1,24 +1,13 @@
 window.addEventListener('DOMContentLoaded', () => {
-    let brain;
-    let featureExtractor;
+    let classifier;
     let trained = false;
     let totalImagesLoaded = 0;
 
-    // 1. Initialize the modern ml5 next-gen feature extractor
-    featureExtractor = ml5.featureExtractor("MobileNet", modelReady);
+    // 1. Initialize a customizable ImageClassifier instance using MobileNet
+    classifier = ml5.imageClassifier('MobileNet', modelReady);
 
     function modelReady() {
-        console.log("Base MobileNet Model Loaded!");
-        
-        // Options configured for simple 2-category custom image mapping
-        const options = {
-            task: 'classification',
-            architecture: 'MobileNetV2',
-            debug: true
-        };
-        
-        // Create the custom neural network brain instance
-        brain = ml5.neuralNetwork(options);
+        console.log('Base MobileNet Model Loaded!');
         document.getElementById('trainStatus').innerText = "Status: Ready for dataset.";
     }
 
@@ -35,49 +24,42 @@ window.addEventListener('DOMContentLoaded', () => {
         const filesArray = Array.from(fileInput.files);
         let sessionCount = 0;
 
-        document.getElementById('loadingFeedback').innerText = `Processing ${filesArray.length} images...`;
+        document.getElementById('loadingFeedback').innerText = `Processing ${filesArray.length} images... please wait...`;
 
         filesArray.forEach(file => {
             const img = document.createElement('img');
             img.src = URL.createObjectURL(file);
             
             img.onload = () => {
-                // Extract structural data features from image using MobileNet
-                const features = featureExtractor.getFeatures(img);
-                
-                // Add the extracted features and user text label to the neural network
-                brain.addData({ x: features }, { y: label });
-                
-                totalImagesLoaded++;
-                sessionCount++;
-                
-                document.getElementById('loadingFeedback').innerText = 
-                    `Successfully loaded ${sessionCount} / ${filesArray.length} for "${label}" (Total Brain size: ${totalImagesLoaded})`;
+                // Modern ml5-next-gen syntax for adding custom files directly to the classifier
+                classifier.addExample(img, label, () => {
+                    totalImagesLoaded++;
+                    sessionCount++;
+                    
+                    // Update text on screen in real time
+                    document.getElementById('loadingFeedback').innerText = 
+                        `Successfully loaded ${sessionCount} / ${filesArray.length} for "${label}" (Total Brain size: ${totalImagesLoaded})`;
+                });
             };
         });
 
-        fileInput.value = '';
+        fileInput.value = ''; // clear file selector box
     });
 
-    // 3. Training the neural network
+    // 3. Training the model
     document.getElementById('trainBtn').addEventListener('click', () => {
         document.getElementById('trainStatus').innerText = "Training... please wait.";
         
-        // Organize layout structures before training execution
-        brain.normalizeData();
-        
-        const trainingOptions = { epochs: 20 };
-        brain.train(trainingOptions, whileTraining, finishedTraining);
+        // Execute modern train command with feedback loops
+        classifier.train((lossValue) => {
+            if (lossValue === null) {
+                document.getElementById('trainStatus').innerText = "Training Complete! Ready to test.";
+                trained = true;
+            } else {
+                console.log('Loss:', lossValue);
+            }
+        });
     });
-
-    function whileTraining(epoch, loss) {
-        console.log(`Epoch: ${epoch} - Loss: ${loss.loss}`);
-    }
-
-    function finishedTraining() {
-        document.getElementById('trainStatus').innerText = "Training Complete! Ready to test.";
-        trained = true;
-    }
 
     // Preview the test image
     let testImgElement = null;
@@ -92,7 +74,7 @@ window.addEventListener('DOMContentLoaded', () => {
         }
     });
 
-    // 4. Identify the unknown target leaf
+    // 4. Identify the new leaf
     document.getElementById('predictBtn').addEventListener('click', () => {
         if (!trained) {
             alert("Train the model first or load a saved model!");
@@ -103,34 +85,31 @@ window.addEventListener('DOMContentLoaded', () => {
             return;
         }
 
-        // Extract features from test target image
-        const testFeatures = featureExtractor.getFeatures(testImgElement);
-        
-        // Pass the structural features to the trained brain for classification
-        brain.classify({ x: testFeatures }, (err, results) => {
+        classifier.classify(testImgElement, (err, results) => {
             if (err) {
                 console.error(err);
                 return;
             }
+            // Parse next-gen results array cleanly
             if (results && results.length > 0) {
-                const topResult = results[0];
+                const topResult = results[0]; // Gets the highest match result
                 document.getElementById('result').innerText = `Result: ${topResult.label} (${Math.round(topResult.confidence * 100)}% sure)`;
             }
         });
     });
 
-    // 5. Save the custom brain model
+    // 5. Save the brain to files
     document.getElementById('saveModelBtn').addEventListener('click', () => {
         if (!trained) {
             alert("Train your model before trying to save it!");
             return;
         }
-        brain.save(); 
+        classifier.save(); 
     });
 
-    // 6. Load a saved custom brain model back into the page
+    // 6. Load a saved brain back into the page
     document.getElementById('loadModelBtn').addEventListener('click', () => {
-        brain.load(null, () => {
+        classifier.load(null, () => {
             document.getElementById('trainStatus').innerText = "Saved brain successfully loaded! Ready to test.";
             trained = true;
         });
