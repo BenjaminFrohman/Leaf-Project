@@ -3,13 +3,16 @@ window.addEventListener('DOMContentLoaded', () => {
     let trained = false;
     let totalImagesLoaded = 0;
 
-    // Configuration properties optimized to process our flat 64x64 color pixels matrix
+    // FIX: Define the explicit flat input array size number directly
+    // 64 width * 64 height * 4 color channels = 16384 unique values
     const options = {
         task: 'classification',
+        inputs: 16384, 
+        outputs: ['label'],
         debug: true
     };
     
-    // Initialize the neural network structure directly
+    // Spin up the core neural network brain directly with defined bounds
     brain = ml5.neuralNetwork(options);
     
     console.log('Base Neural Network Initialized!');
@@ -44,8 +47,8 @@ window.addEventListener('DOMContentLoaded', () => {
                 const imgData = ctx.getImageData(0, 0, 64, 64).data;
                 const pixelArray = Array.from(imgData).map(val => val / 255); 
 
-                // Pass the image pixel array data directly to our network container
-                brain.addData([pixelArray], [label]);
+                // FIX: Map the flat data array cleanly into standard key-value layout blocks
+                brain.addData({ x: pixelArray }, { y: label });
                 
                 totalImagesLoaded++;
                 sessionCount++;
@@ -73,8 +76,11 @@ window.addEventListener('DOMContentLoaded', () => {
             }
             
             document.getElementById('trainStatus').innerText = "Training... please wait.";
+            
+            // Finalize structural bounds scaling
             brain.normalizeData();
             
+            // Execute training over explicit iteration cycles
             const trainingOptions = { epochs: 30 };
             brain.train(trainingOptions, whileTraining, finishedTraining);
         } catch (error) {
@@ -126,20 +132,20 @@ window.addEventListener('DOMContentLoaded', () => {
         const imgData = ctx.getImageData(0, 0, 64, 64).data;
         const testPixelArray = Array.from(imgData).map(val => val / 255);
 
-        // Run the prediction loop on the processed pixel values matrix
-        brain.classify([testPixelArray], (err, results) => {
+        // Run the prediction
+        brain.classify({ x: testPixelArray }, (err, results) => {
             if (err) {
                 console.error(err);
                 return;
             }
             if (results && results.length > 0) {
-                const topResult = results; 
+                const topResult = results[0]; // Isolate highest match configuration
                 document.getElementById('result').innerText = `Result: ${topResult.label} (${Math.round(topResult.confidence * 100)}% sure)`;
             }
         });
     });
 
-    // 4. Save progress configurations
+    // 4. Backup saves
     document.getElementById('saveModelBtn').addEventListener('click', () => {
         if (!trained) {
             alert("Train your model before trying to save it!");
@@ -148,7 +154,7 @@ window.addEventListener('DOMContentLoaded', () => {
         brain.save(); 
     });
 
-    // 5. Restore session settings
+    // 5. Restoring data instances
     document.getElementById('loadModelBtn').addEventListener('click', () => {
         brain.load(null, () => {
             document.getElementById('trainStatus').innerText = "Saved brain successfully loaded! Ready to test.";
