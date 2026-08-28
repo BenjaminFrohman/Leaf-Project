@@ -81,7 +81,7 @@ window.addEventListener('DOMContentLoaded', () => {
             document.getElementById('trainStatus').innerText = "Training... please wait.";
             brain.normalizeData();
             
-            const trainingOptions = { epochs: 30 };
+            const trainingOptions = { epochs: 250 };
             brain.train(trainingOptions, whileTraining, finishedTraining);
         } catch (error) {
             console.error("Training engine error, attempting fallback...", error);
@@ -99,11 +99,11 @@ window.addEventListener('DOMContentLoaded', () => {
         trained = true;
     }
 
-    // FIX: Preview the test image with strict target file checking to prevent 118 crashes
+    // FIX: Grab the singular array item using index notation to prevent Overload Resolution failures
     let testImgElement = null;
     document.getElementById('testLoader').addEventListener('change', (e) => {
-        if (e.target.value && e.target.files && e.target.files.length > 0) {
-            const file = e.target.files[0]; // Fetch the singular targeted item cleanly
+        if (e.target.files && e.target.files.length > 0) {
+            const file = e.target.files[0]; // CRITICAL FIX: Target the first file directly, not the file list array
             const previewDiv = document.getElementById('imagePreview');
             previewDiv.innerHTML = '';
             testImgElement = document.createElement('img');
@@ -143,11 +143,11 @@ window.addEventListener('DOMContentLoaded', () => {
                 console.error(err);
                 return;
             }
-            console.log(results); // Keeps log arrays viewable for diagnostics
+            console.log(results);
             
-            // FIX: Modern ml5 layouts pass results as a clean array sorted by confidence
+            // FIX: Safely parse the top index values out of the custom result layout blocks
             if (results && results.length > 0) {
-                const topResult = results[0]; // Isolate highest match configuration
+                const topResult = results[0]; // Isolate the highest match result array item
                 document.getElementById('result').innerText = `Result: ${topResult.label} (${Math.round(topResult.confidence * 100)}% sure)`;
             }
         });
