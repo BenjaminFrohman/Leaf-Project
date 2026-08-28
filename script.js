@@ -3,16 +3,15 @@ window.addEventListener('DOMContentLoaded', () => {
     let trained = false;
     let totalImagesLoaded = 0;
 
-    // CORE FIX: Configured the inputs property explicitly as an array containing resolution sizes
-    // This instructs the ml5 data structure to cleanly register the image grid layout parameters
+    // CORE FIX: Explicitly define input and output label arrays so ml5 can validate them
     const options = {
-        task: 'imageClassification',
-        inputs: [64, 64, 4], 
-        outputs: ['label'],
+        task: 'classification',
+        inputs: ['image'],       // Tells ml5 to look for a property named 'image'
+        outputs: ['label'],      // Tells ml5 to look for a property named 'label'
         debug: true
     };
     
-    // Spin up the core neural network brain directly with defined bounds
+    // Initialize the neural network structure cleanly
     brain = ml5.neuralNetwork(options);
     
     console.log('Base Neural Network Initialized!');
@@ -47,7 +46,7 @@ window.addEventListener('DOMContentLoaded', () => {
                 const imgData = ctx.getImageData(0, 0, 64, 64).data;
                 const pixelArray = Array.from(imgData).map(val => val / 255); 
 
-                // Map data properties correctly within the structural canvas array definition
+                // Feed the structural properties to match the exact keys defined above
                 brain.addData({ image: pixelArray }, { label: label });
                 
                 totalImagesLoaded++;
@@ -80,7 +79,7 @@ window.addEventListener('DOMContentLoaded', () => {
             // Finalize structural bounds scaling
             brain.normalizeData();
             
-            // Execute training over explicit iteration cycles
+            // Execute training over iteration cycles
             const trainingOptions = { epochs: 30 };
             brain.train(trainingOptions, whileTraining, finishedTraining);
         } catch (error) {
@@ -132,14 +131,14 @@ window.addEventListener('DOMContentLoaded', () => {
         const imgData = ctx.getImageData(0, 0, 64, 64).data;
         const testPixelArray = Array.from(imgData).map(val => val / 255);
 
-        // Run the prediction on the verified structural property matrix
+        // Run prediction against the structured keys
         brain.classify({ image: testPixelArray }, (err, results) => {
             if (err) {
                 console.error(err);
                 return;
             }
             if (results && results.length > 0) {
-                const topResult = results; 
+                const topResult = results[0]; // Isolate highest match configuration
                 document.getElementById('result').innerText = `Result: ${topResult.label} (${Math.round(topResult.confidence * 100)}% sure)`;
             }
         });
