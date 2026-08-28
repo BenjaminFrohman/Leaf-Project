@@ -3,19 +3,32 @@ window.addEventListener('DOMContentLoaded', () => {
     let trained = false;
     let totalImagesLoaded = 0;
 
-    // FIX: Define the explicit shape dimensions for our 64x64 image grid
-    // 64 width * 64 height * 4 color channels (Red, Green, Blue, Alpha) = 16384 inputs
+    // FIX: Define explicit architectural layers for custom vector sizes
     const options = {
         task: 'classification',
-        inputs: 16384, 
-        outputs: ['label'],
-        debug: true
+        debug: true,
+        layers: [
+            {
+                type: 'dense',
+                units: 16384, // Input layer dimensions matching our 64x64x4 pixel grid
+                activation: 'relu'
+            },
+            {
+                type: 'dense',
+                units: 64,    // Hidden layer to compress spatial trends
+                activation: 'relu'
+            },
+            {
+                type: 'dense',  // Output layer dynamically built by ml5.js definitions
+                activation: 'softmax'
+            }
+        ]
     };
     
-    // Spin up the core neural network brain directly with defined bounds
+    // Create the neural network instance with the pre-defined layers
     brain = ml5.neuralNetwork(options);
     
-    console.log('Base MobileNet Model Loaded!');
+    console.log('Base Neural Network Initialized!');
     document.getElementById('trainStatus').innerText = "Status: Ready for dataset.";
 
     // 1. Handling dataset input
@@ -47,8 +60,8 @@ window.addEventListener('DOMContentLoaded', () => {
                 const imgData = ctx.getImageData(0, 0, 64, 64).data;
                 const pixelArray = Array.from(imgData).map(val => val / 255); 
 
-                // Feed the balanced structural layout array to the network matrix
-                brain.addData([pixelArray], [label]);
+                // Feed directly as a single flat array object
+                brain.addData({ input: pixelArray }, { output: label });
                 
                 totalImagesLoaded++;
                 sessionCount++;
@@ -76,12 +89,9 @@ window.addEventListener('DOMContentLoaded', () => {
             }
             
             document.getElementById('trainStatus').innerText = "Training... please wait.";
-            
-            // Finalize structural bounds scaling
             brain.normalizeData();
             
-            // Execute training over explicit iteration cycles
-            const trainingOptions = { epochs: 30 };
+            const trainingOptions = { epochs: 30, batchSize: 4 };
             brain.train(trainingOptions, whileTraining, finishedTraining);
         } catch (error) {
             console.error("Training engine error, attempting fallback...", error);
@@ -99,10 +109,9 @@ window.addEventListener('DOMContentLoaded', () => {
         trained = true;
     }
 
-    // Preview the test target image
+    // Preview the test image
     let testImgElement = null;
     document.getElementById('testLoader').addEventListener('change', (e) => {
-        // FIX: Added guard check to ensure a file was actually picked
         if (e.target.files && e.target.files.length > 0) {
             const file = e.target.files[0];
             const previewDiv = document.getElementById('imagePreview');
@@ -134,7 +143,7 @@ window.addEventListener('DOMContentLoaded', () => {
         const testPixelArray = Array.from(imgData).map(val => val / 255);
 
         // Run the prediction
-        brain.classify([testPixelArray], (err, results) => {
+        brain.classify({ input: testPixelArray }, (err, results) => {
             if (err) {
                 console.error(err);
                 return;
@@ -146,7 +155,7 @@ window.addEventListener('DOMContentLoaded', () => {
         });
     });
 
-    // 4. Backup saves
+    // 4. Save progress
     document.getElementById('saveModelBtn').addEventListener('click', () => {
         if (!trained) {
             alert("Train your model before trying to save it!");
@@ -155,7 +164,7 @@ window.addEventListener('DOMContentLoaded', () => {
         brain.save(); 
     });
 
-    // 5. Restoring data instances
+    // 5. Restore session
     document.getElementById('loadModelBtn').addEventListener('click', () => {
         brain.load(null, () => {
             document.getElementById('trainStatus').innerText = "Saved brain successfully loaded! Ready to test.";
