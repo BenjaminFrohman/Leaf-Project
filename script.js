@@ -43,7 +43,7 @@ document.getElementById('trainBtn').addEventListener('click', () => {
     classifier.train((lossValue) => {
         if (lossValue === null) {
             document.getElementById('trainStatus').innerText = "Training Complete! Ready to test.";
-         trained = true;
+            trained = true;
         } else {
             console.log('Loss:', lossValue); // Shows training progress
         }
