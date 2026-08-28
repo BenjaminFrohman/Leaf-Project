@@ -2,6 +2,7 @@ window.addEventListener('DOMContentLoaded', () => {
     let brain;
     let trained = false;
     let totalImagesLoaded = 0;
+    let testImgElement = null; // Defined safely ONCE here at the top
 
     const options = {
         task: 'classification',
@@ -13,7 +14,7 @@ window.addEventListener('DOMContentLoaded', () => {
     console.log('Base Neural Network Initialized!');
     document.getElementById('trainStatus').innerText = "Status: Ready for dataset.";
 
-    // 1. Handling dataset input
+    // === PART 1: HANDLING DATASET INPUT ===
     document.getElementById('addImagesBtn').addEventListener('click', () => {
         const label = document.getElementById('labelInput').value.trim();
         const fileInput = document.getElementById('imageLoader');
@@ -64,7 +65,7 @@ window.addEventListener('DOMContentLoaded', () => {
         fileInput.value = '';
     });
 
-    // 2. Training the neural network
+    // === PART 2: TRAINING THE MODEL ===
     document.getElementById('trainBtn').addEventListener('click', async () => {
         if (totalImagesLoaded === 0) {
             alert("Please add some images to the brain before training!");
@@ -99,24 +100,10 @@ window.addEventListener('DOMContentLoaded', () => {
         trained = true;
     }
 
-    // Preview the test image with strict target file checking
-    let testImgElement = null;
-    document.getElementById('testLoader').addEventListener('change', (e) => {
-        if (e.target.files && e.target.files.length > 0) {
-            const file = e.target.files; 
-            const previewDiv = document.getElementById('imagePreview');
-            previewDiv.innerHTML = '';
-            testImgElement = document.createElement('img');
-            testImgElement.src = URL.createObjectURL(file);
-            previewDiv.appendChild(testImgElement);
-        }
-    });
-
     // === PART 3: PREVIEW THE TEST IMAGE ===
-    let testImgElement = null;
     document.getElementById('testLoader').addEventListener('change', (e) => {
         if (e.target.files && e.target.files.length > 0) {
-            // FIX: Grab the single file explicitly via index [0] to stop the crash
+            // FIX: Grabbed the single file explicitly via index [0] to stop the crash
             const file = e.target.files[0]; 
             const previewDiv = document.getElementById('imagePreview');
             previewDiv.innerHTML = '';
@@ -158,7 +145,7 @@ window.addEventListener('DOMContentLoaded', () => {
             }
             console.log(results);
             
-            // FIX: Extract your logged array properties cleanly onto the website screen
+            // FIX: Extract your array properties cleanly onto the website screen
             if (results && results.length > 0) {
                 const topResult = results[0]; 
                 document.getElementById('result').innerText = `Result: ${topResult.label} (${Math.round(topResult.confidence * 100)}% sure)`;
@@ -166,8 +153,16 @@ window.addEventListener('DOMContentLoaded', () => {
         });
     });
 
+    // === PART 5: BACKUP SAVES ===
+    document.getElementById('saveModelBtn').addEventListener('click', () => {
+        if (!trained) {
+            alert("Train your model before trying to save it!");
+            return;
+        }
+        brain.save(); 
+    });
 
-    // 5. Restoring data instances
+    // === PART 6: RESTORING PROGRESS ===
     document.getElementById('loadModelBtn').addEventListener('click', () => {
         brain.load(null, () => {
             document.getElementById('trainStatus').innerText = "Saved brain successfully loaded! Ready to test.";
