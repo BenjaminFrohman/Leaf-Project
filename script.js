@@ -3,15 +3,16 @@ window.addEventListener('DOMContentLoaded', () => {
     let trained = false;
     let totalImagesLoaded = 0;
 
-    // CORE FIX: Explicitly define input and output label arrays so ml5 can validate them
+    // CORE FIX: Use a strict integer parameter to hard-force the image data grid size
+    // 64 width * 64 height * 4 channels = 16384 numeric inputs.
     const options = {
         task: 'classification',
-        inputs: ['image'],       // Tells ml5 to look for a property named 'image'
-        outputs: ['label'],      // Tells ml5 to look for a property named 'label'
+        inputs: 16384, 
+        outputs: 1, // Expecting 1 classification text string output
         debug: true
     };
     
-    // Initialize the neural network structure cleanly
+    // Initialize the neural network structure directly
     brain = ml5.neuralNetwork(options);
     
     console.log('Base Neural Network Initialized!');
@@ -46,8 +47,9 @@ window.addEventListener('DOMContentLoaded', () => {
                 const imgData = ctx.getImageData(0, 0, 64, 64).data;
                 const pixelArray = Array.from(imgData).map(val => val / 255); 
 
-                // Feed the structural properties to match the exact keys defined above
-                brain.addData({ image: pixelArray }, { label: label });
+                // CORE FIX: Pass data as matching parallel index arrays [inputs], [outputs]
+                // This completely bypasses the broken string property label engine
+                brain.addData([pixelArray], [label]);
                 
                 totalImagesLoaded++;
                 sessionCount++;
@@ -79,7 +81,7 @@ window.addEventListener('DOMContentLoaded', () => {
             // Finalize structural bounds scaling
             brain.normalizeData();
             
-            // Execute training over iteration cycles
+            // Execute training over explicit iteration cycles
             const trainingOptions = { epochs: 30 };
             brain.train(trainingOptions, whileTraining, finishedTraining);
         } catch (error) {
@@ -131,14 +133,14 @@ window.addEventListener('DOMContentLoaded', () => {
         const imgData = ctx.getImageData(0, 0, 64, 64).data;
         const testPixelArray = Array.from(imgData).map(val => val / 255);
 
-        // Run prediction against the structured keys
-        brain.classify({ image: testPixelArray }, (err, results) => {
+        // Run the prediction using matching array wrappers
+        brain.classify([testPixelArray], (err, results) => {
             if (err) {
                 console.error(err);
                 return;
             }
             if (results && results.length > 0) {
-                const topResult = results[0]; // Isolate highest match configuration
+                const topResult = results; 
                 document.getElementById('result').innerText = `Result: ${topResult.label} (${Math.round(topResult.confidence * 100)}% sure)`;
             }
         });
