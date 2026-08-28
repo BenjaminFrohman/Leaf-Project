@@ -1,0 +1,71 @@
+:root {
+    --bg-color: #f4f7f5;
+    --card-bg: #ffffff;
+    --text-main: #2d3e35;
+    --accent: #6b8e23; /* Olive green */
+    --accent-hover: #55721a;
+}
+
+body {
+    background-color: var(--bg-color);
+    color: var(--text-main);
+    font-family: 'Courier New', Courier, monospace; /* Lo-fi / Retro vibe */
+    display: flex;
+    justify-content: center;
+    padding: 2rem;
+}
+
+.container {
+    max-width: 600px;
+    width: 100%;
+}
+
+h1 {
+    text-align: center;
+    letter-spacing: -1px;
+}
+
+.card {
+    background: var(--card-bg);
+    padding: 2rem;
+    border-radius: 16px;
+    box-shadow: 0 8px 24px rgba(107, 142, 35, 0.1);
+    margin-bottom: 2rem;
+    border: 1px solid rgba(107, 142, 35, 0.15);
+}
+
+input, button {
+    display: block;
+    width: 100%;
+    margin: 1rem 0;
+    padding: 0.8rem;
+    border-radius: 8px;
+    border: 1px solid #ccc;
+    box-sizing: border-box;
+}
+
+button {
+    background: var(--accent);
+    color: white;
+    font-weight: bold;
+    cursor: pointer;
+    border: none;
+    transition: background 0.2s;
+}
+
+button:hover {
+    background: var(--accent-hover);
+}
+
+.special {
+    background: #2d3e35;
+}
+.special:hover {
+    background: #1a2620;
+}
+
+#imagePreview img {
+    max-width: 100%;
+    border-radius: 8px;
+    margin-top: 1rem;
+}

@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Leaf Vibe ID</title>
+    <link rel="stylesheet" href="style.css">
+    <!-- Include ml5.js library -->
+    <script src="https://unpkg.com"></script>
+</head>
+<body>
+
+    <main class="container">
+        <h1>🍃 Leaf ID Collective</h1>
+        
+        <!-- Section A: Data Input (Training) -->
+        <section class="card">
+            <h2>1. Feed the Dataset</h2>
+            <input type="text" id="labelInput" placeholder="Leaf label (e.g., Maple)">
+            <input type="file" id="imageLoader" accept="image/*" multiple>
+            <button id="addImagesBtn">Add to Brain</button>
+            <button id="trainBtn" class="special">Train Model</button>
+            <p id="trainStatus">Status: Awaiting data...</p>
+        </section>
+
+        <!-- Section B: Identification (Testing) -->
+        <section class="card">
+            <h2>2. Identify New Leaf</h2>
+            <input type="file" id="testLoader" accept="image/*">
+            <div id="imagePreview"></div>
+            <button id="predictBtn">Identify</button>
+            <h3 id="result">Result: Unknown</h3>
+        </section>
+    </main>
+
+    <script src="script.js"></script>
+</body>
+</html>
