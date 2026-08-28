@@ -3,13 +3,16 @@ window.addEventListener('DOMContentLoaded', () => {
     let trained = false;
     let totalImagesLoaded = 0;
 
-    // Configure the network properties according to ml5-next-gen specifications
+    // FIX: Define the explicit shape dimensions for our 64x64 image grid
+    // 64 width * 64 height * 4 color channels (Red, Green, Blue, Alpha) = 16384 inputs
     const options = {
         task: 'classification',
+        inputs:, 
+        outputs: ['label'],
         debug: true
     };
     
-    // Spin up the core neural network brain directly
+    // Spin up the core neural network brain directly with defined bounds
     brain = ml5.neuralNetwork(options);
     
     console.log('Base MobileNet Model Loaded!');
@@ -44,7 +47,8 @@ window.addEventListener('DOMContentLoaded', () => {
                 const imgData = ctx.getImageData(0, 0, 64, 64).data;
                 const pixelArray = Array.from(imgData).map(val => val / 255); 
 
-                brain.addData({ x: pixelArray }, { y: label });
+                // Feed the balanced structural layout array to the network matrix
+                brain.addData([pixelArray], [label]);
                 
                 totalImagesLoaded++;
                 sessionCount++;
@@ -57,12 +61,16 @@ window.addEventListener('DOMContentLoaded', () => {
         fileInput.value = '';
     });
 
-    // 2. Training the neural network (UPDATED FOR WEBGPU INITIALIZATION ASYNC)
+    // 2. Training the neural network
     document.getElementById('trainBtn').addEventListener('click', async () => {
+        if (totalImagesLoaded === 0) {
+            alert("Please add some images to the brain before training!");
+            return;
+        }
+
         document.getElementById('trainStatus').innerText = "Initializing engine... please wait.";
         
         try {
-            // FIX: Force the background math engine to finish booting up before we try to touch it
             if (ml5.tf && ml5.tf.ready) {
                 await ml5.tf.ready();
             }
@@ -72,12 +80,11 @@ window.addEventListener('DOMContentLoaded', () => {
             // Finalize structural bounds scaling
             brain.normalizeData();
             
-            // Execute the next-gen processing configuration
+            // Execute training over explicit iteration cycles
             const trainingOptions = { epochs: 30 };
             brain.train(trainingOptions, whileTraining, finishedTraining);
         } catch (error) {
             console.error("Training engine error, attempting fallback...", error);
-            // Fallback attempt if WebGPU acts up
             brain.normalizeData();
             brain.train({ epochs: 30 }, whileTraining, finishedTraining);
         }
@@ -95,8 +102,9 @@ window.addEventListener('DOMContentLoaded', () => {
     // Preview the test target image
     let testImgElement = null;
     document.getElementById('testLoader').addEventListener('change', (e) => {
-        const file = e.target.files;
-        if (file) {
+        // FIX: Added guard check to ensure a file was actually picked
+        if (e.target.files && e.target.files.length > 0) {
+            const file = e.target.files[0];
             const previewDiv = document.getElementById('imagePreview');
             previewDiv.innerHTML = '';
             testImgElement = document.createElement('img');
@@ -126,7 +134,7 @@ window.addEventListener('DOMContentLoaded', () => {
         const testPixelArray = Array.from(imgData).map(val => val / 255);
 
         // Run the prediction
-        brain.classify({ x: testPixelArray }, (err, results) => {
+        brain.classify([testPixelArray], (err, results) => {
             if (err) {
                 console.error(err);
                 return;
