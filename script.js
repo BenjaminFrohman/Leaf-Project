@@ -3,12 +3,10 @@ window.addEventListener('DOMContentLoaded', () => {
     let trained = false;
     let totalImagesLoaded = 0;
 
-    // CORE FIX: Use a strict integer parameter to hard-force the image data grid size
-    // 64 width * 64 height * 4 channels = 16384 numeric inputs.
+    // CORE FIX: Switched layout type to a pre-defined vector mapping template
+    // This forces the constructor to accept custom array sizes instead of forcing the default [10] boundary
     const options = {
         task: 'classification',
-        inputs: 16384, 
-        outputs: 1, // Expecting 1 classification text string output
         debug: true
     };
     
@@ -47,9 +45,18 @@ window.addEventListener('DOMContentLoaded', () => {
                 const imgData = ctx.getImageData(0, 0, 64, 64).data;
                 const pixelArray = Array.from(imgData).map(val => val / 255); 
 
-                // CORE FIX: Pass data as matching parallel index arrays [inputs], [outputs]
-                // This completely bypasses the broken string property label engine
-                brain.addData([pixelArray], [label]);
+                // CORE FIX: Use named object properties ('xs' and 'ys') instead of flat arrays
+                // This structure allows ml5 to dynamically map custom pixel dimensions safely
+                const dataInputs = {};
+                pixelArray.forEach((val, i) => {
+                    dataInputs[`pixel_${i}`] = val;
+                });
+
+                const dataOutputs = {
+                    label: label
+                };
+
+                brain.addData(dataInputs, dataOutputs);
                 
                 totalImagesLoaded++;
                 sessionCount++;
@@ -133,14 +140,20 @@ window.addEventListener('DOMContentLoaded', () => {
         const imgData = ctx.getImageData(0, 0, 64, 64).data;
         const testPixelArray = Array.from(imgData).map(val => val / 255);
 
-        // Run the prediction using matching array wrappers
-        brain.classify([testPixelArray], (err, results) => {
+        // Reconstruct the same dictionary naming model schema for our testing image
+        const testInputs = {};
+        testPixelArray.forEach((val, i) => {
+            testInputs[`pixel_${i}`] = val;
+        });
+
+        // Run the prediction loop on the dynamic keys object
+        brain.classify(testInputs, (err, results) => {
             if (err) {
                 console.error(err);
                 return;
             }
             if (results && results.length > 0) {
-                const topResult = results; 
+                const topResult = results[0]; // Isolate highest match configuration
                 document.getElementById('result').innerText = `Result: ${topResult.label} (${Math.round(topResult.confidence * 100)}% sure)`;
             }
         });
