@@ -112,7 +112,21 @@ window.addEventListener('DOMContentLoaded', () => {
         }
     });
 
-    // 3. Identify the unknown leaf
+    // === PART 3: PREVIEW THE TEST IMAGE ===
+    let testImgElement = null;
+    document.getElementById('testLoader').addEventListener('change', (e) => {
+        if (e.target.files && e.target.files.length > 0) {
+            // FIX: Grab the single file explicitly via index [0] to stop the crash
+            const file = e.target.files[0]; 
+            const previewDiv = document.getElementById('imagePreview');
+            previewDiv.innerHTML = '';
+            testImgElement = document.createElement('img');
+            testImgElement.src = URL.createObjectURL(file);
+            previewDiv.appendChild(testImgElement);
+        }
+    });
+
+    // === PART 4: IDENTIFY THE LEAF ===
     document.getElementById('predictBtn').addEventListener('click', () => {
         if (!trained) {
             alert("Train the model first or load a saved model!");
@@ -137,7 +151,6 @@ window.addEventListener('DOMContentLoaded', () => {
             testInputs[`pixel_${i}`] = val;
         });
 
-        // Run the prediction loop
         brain.classify(testInputs, (err, results) => {
             if (err) {
                 console.error(err);
@@ -145,22 +158,14 @@ window.addEventListener('DOMContentLoaded', () => {
             }
             console.log(results);
             
-            // CORE FIX: Read the explicit '.label' property value directly from the top array index
+            // FIX: Extract your logged array properties cleanly onto the website screen
             if (results && results.length > 0) {
-                const topResult = results; 
+                const topResult = results[0]; 
                 document.getElementById('result').innerText = `Result: ${topResult.label} (${Math.round(topResult.confidence * 100)}% sure)`;
             }
         });
     });
 
-    // 4. Backup saves
-    document.getElementById('saveModelBtn').addEventListener('click', () => {
-        if (!trained) {
-            alert("Train your model before trying to save it!");
-            return;
-        }
-        brain.save(); 
-    });
 
     // 5. Restoring data instances
     document.getElementById('loadModelBtn').addEventListener('click', () => {
