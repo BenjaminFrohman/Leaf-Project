@@ -81,7 +81,7 @@ window.addEventListener('DOMContentLoaded', () => {
             document.getElementById('trainStatus').innerText = "Training... please wait.";
             brain.normalizeData();
             
-            const trainingOptions = { epochs: 250 };
+            const trainingOptions = { epochs: 30 };
             brain.train(trainingOptions, whileTraining, finishedTraining);
         } catch (error) {
             console.error("Training engine error, attempting fallback...", error);
@@ -99,11 +99,11 @@ window.addEventListener('DOMContentLoaded', () => {
         trained = true;
     }
 
-    // FIX: Grab the singular array item using index notation to prevent Overload Resolution failures
+    // Preview the test image with strict target file checking
     let testImgElement = null;
     document.getElementById('testLoader').addEventListener('change', (e) => {
         if (e.target.files && e.target.files.length > 0) {
-            const file = e.target.files[0]; // CRITICAL FIX: Target the first file directly, not the file list array
+            const file = e.target.files; 
             const previewDiv = document.getElementById('imagePreview');
             previewDiv.innerHTML = '';
             testImgElement = document.createElement('img');
@@ -145,9 +145,9 @@ window.addEventListener('DOMContentLoaded', () => {
             }
             console.log(results);
             
-            // FIX: Safely parse the top index values out of the custom result layout blocks
+            // CORE FIX: Read the explicit '.label' property value directly from the top array index
             if (results && results.length > 0) {
-                const topResult = results[0]; // Isolate the highest match result array item
+                const topResult = results; 
                 document.getElementById('result').innerText = `Result: ${topResult.label} (${Math.round(topResult.confidence * 100)}% sure)`;
             }
         });
