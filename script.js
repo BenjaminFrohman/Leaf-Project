@@ -1,17 +1,24 @@
 window.addEventListener('DOMContentLoaded', () => {
-    let classifier;
+    let brain;
     let trained = false;
     let totalImagesLoaded = 0;
 
-    // 1. Initialize a customizable ImageClassifier instance using MobileNet
-    classifier = ml5.imageClassifier('MobileNet', modelReady);
-
-    function modelReady() {
+    // Configure the network properties according to ml5-next-gen specifications
+    const options = {
+        task: 'classification',
+        debug: true
+    };
+    
+    // Spin up the core neural network brain directly
+    brain = ml5.neuralNetwork(options);
+    
+    // Simulating immediate readiness for data input
+    setTimeout(() => {
         console.log('Base MobileNet Model Loaded!');
         document.getElementById('trainStatus').innerText = "Status: Ready for dataset.";
-    }
+    }, 1000);
 
-    // 2. Handling dataset input
+    // 1. Handling dataset input
     document.getElementById('addImagesBtn').addEventListener('click', () => {
         const label = document.getElementById('labelInput').value.trim();
         const fileInput = document.getElementById('imageLoader');
@@ -24,44 +31,60 @@ window.addEventListener('DOMContentLoaded', () => {
         const filesArray = Array.from(fileInput.files);
         let sessionCount = 0;
 
-        document.getElementById('loadingFeedback').innerText = `Processing ${filesArray.length} images... please wait...`;
+        document.getElementById('loadingFeedback').innerText = `Processing ${filesArray.length} images...`;
 
         filesArray.forEach(file => {
             const img = document.createElement('img');
             img.src = URL.createObjectURL(file);
             
             img.onload = () => {
-                // Modern ml5-next-gen syntax for adding custom files directly to the classifier
-                classifier.addExample(img, label, () => {
-                    totalImagesLoaded++;
-                    sessionCount++;
-                    
-                    // Update text on screen in real time
-                    document.getElementById('loadingFeedback').innerText = 
-                        `Successfully loaded ${sessionCount} / ${filesArray.length} for "${label}" (Total Brain size: ${totalImagesLoaded})`;
-                });
+                // Safely convert image to a flat color pixel matrix for the next-gen neural net
+                const canvas = document.createElement('canvas');
+                const ctx = canvas.getContext('2d');
+                canvas.width = 64;  // Standardizing structural resolution limits
+                canvas.height = 64;
+                ctx.drawImage(img, 0, 0, 64, 64);
+                
+                // Pull raw color values (Red, Green, Blue, Alpha) out of the canvas bounding box
+                const imgData = ctx.getImageData(0, 0, 64, 64).data;
+                const pixelArray = Array.from(imgData).map(val => val / 255); // Normalize structural bounds
+
+                // Map data array cleanly to the network training matrix
+                brain.addData({ x: pixelArray }, { y: label });
+                
+                totalImagesLoaded++;
+                sessionCount++;
+                
+                document.getElementById('loadingFeedback').innerText = 
+                    `Successfully loaded ${sessionCount} / ${filesArray.length} for "${label}" (Total Brain size: ${totalImagesLoaded})`;
             };
         });
 
-        fileInput.value = ''; // clear file selector box
+        fileInput.value = '';
     });
 
-    // 3. Training the model
+    // 2. Training the neural network
     document.getElementById('trainBtn').addEventListener('click', () => {
         document.getElementById('trainStatus').innerText = "Training... please wait.";
         
-        // Execute modern train command with feedback loops
-        classifier.train((lossValue) => {
-            if (lossValue === null) {
-                document.getElementById('trainStatus').innerText = "Training Complete! Ready to test.";
-                trained = true;
-            } else {
-                console.log('Loss:', lossValue);
-            }
-        });
+        // Finalize structural bounds scaling
+        brain.normalizeData();
+        
+        // Execute the next-gen processing configuration
+        const trainingOptions = { epochs: 30 };
+        brain.train(trainingOptions, whileTraining, finishedTraining);
     });
 
-    // Preview the test image
+    function whileTraining(epoch, loss) {
+        console.log(`Epoch: ${epoch} - Loss: ${loss.loss}`);
+    }
+
+    function finishedTraining() {
+        document.getElementById('trainStatus').innerText = "Training Complete! Ready to test.";
+        trained = true;
+    }
+
+    // Preview the test target image
     let testImgElement = null;
     document.getElementById('testLoader').addEventListener('change', (e) => {
         const file = e.target.files;
@@ -74,7 +97,7 @@ window.addEventListener('DOMContentLoaded', () => {
         }
     });
 
-    // 4. Identify the new leaf
+    // 3. Identify the unknown leaf
     document.getElementById('predictBtn').addEventListener('click', () => {
         if (!trained) {
             alert("Train the model first or load a saved model!");
@@ -85,31 +108,41 @@ window.addEventListener('DOMContentLoaded', () => {
             return;
         }
 
-        classifier.classify(testImgElement, (err, results) => {
+        // Convert the test leaf to the exact same matrix format
+        const canvas = document.createElement('canvas');
+        const ctx = canvas.getContext('2d');
+        canvas.width = 64;
+        canvas.height = 64;
+        ctx.drawImage(testImgElement, 0, 0, 64, 64);
+        
+        const imgData = ctx.getImageData(0, 0, 64, 64).data;
+        const testPixelArray = Array.from(imgData).map(val => val / 255);
+
+        // Run the prediction
+        brain.classify({ x: testPixelArray }, (err, results) => {
             if (err) {
                 console.error(err);
                 return;
             }
-            // Parse next-gen results array cleanly
             if (results && results.length > 0) {
-                const topResult = results[0]; // Gets the highest match result
+                const topResult = results[0]; // Isolate highest match configuration
                 document.getElementById('result').innerText = `Result: ${topResult.label} (${Math.round(topResult.confidence * 100)}% sure)`;
             }
         });
     });
 
-    // 5. Save the brain to files
+    // 4. Backup saves
     document.getElementById('saveModelBtn').addEventListener('click', () => {
         if (!trained) {
             alert("Train your model before trying to save it!");
             return;
         }
-        classifier.save(); 
+        brain.save(); 
     });
 
-    // 6. Load a saved brain back into the page
+    // 5. Restoring data instances
     document.getElementById('loadModelBtn').addEventListener('click', () => {
-        classifier.load(null, () => {
+        brain.load(null, () => {
             document.getElementById('trainStatus').innerText = "Saved brain successfully loaded! Ready to test.";
             trained = true;
         });
