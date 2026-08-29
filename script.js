@@ -180,14 +180,14 @@ window.addEventListener('DOMContentLoaded', () => {
         });
         
         brain.classify(testInputs, (err, results) => {
+            console.log("Classification results:", results);
+            
             if (err) {
-                console.error(err);
+                console.error("Classification error:", err);
+                document.getElementById('result').innerHTML = "❌ Error classifying image";
                 return;
             }
             
-            console.log(results);
-            
-            // FIX: Extract your array properties cleanly onto the website screen
             if (results && results.length > 0) {
                 const topResult = results[0];
                 const confidence = Math.round(topResult.confidence * 100);
@@ -204,6 +204,8 @@ window.addEventListener('DOMContentLoaded', () => {
                 }
                 
                 document.getElementById('result').innerHTML = message;
+            } else {
+                document.getElementById('result').innerHTML = "⚠️ No results returned. Try training with more images!";
             }
         });
     });
