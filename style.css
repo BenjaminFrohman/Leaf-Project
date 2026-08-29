@@ -9,10 +9,11 @@
 body {
     background-color: var(--bg-color);
     color: var(--text-main);
-    font-family: 'Courier New', Courier, monospace;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
     display: flex;
     justify-content: center;
     padding: 2rem 1rem;
+    margin: 0;
 }
 
 .container {
@@ -22,11 +23,16 @@ body {
 
 h1, h2 {
     text-align: center;
+    margin: 0 0 0.5rem 0;
+}
+
+h1 {
+    font-size: 2.5rem;
+    letter-spacing: -1px;
 }
 
 h2 {
     font-size: 1.3rem;
-    margin-top: 0;
 }
 
 p {
@@ -60,7 +66,7 @@ button {
     font-weight: bold;
     cursor: pointer;
     border: none;
-    transition: background 0.2s;
+    transition: background 0.2s, transform 0.1s;
 }
 
 button:hover {
@@ -89,6 +95,7 @@ button:active {
     padding: 0.8rem;
     border-radius: 6px;
     border-left: 4px solid var(--accent);
+    line-height: 1.6;
 }
 
 .small-text {
@@ -101,6 +108,7 @@ button:active {
     max-width: 100%;
     border-radius: 8px;
     margin-top: 1rem;
+    border: 2px solid var(--accent);
 }
 
 .backup-zone {
@@ -123,6 +131,7 @@ button:active {
     padding: 0.8rem;
     border-radius: 6px;
     line-height: 1.6;
+    border-left: 3px solid var(--accent);
 }
 
 #result {
@@ -136,5 +145,17 @@ button:active {
     
     .card {
         padding: 1.5rem;
+    }
+    
+    h1 {
+        font-size: 1.8rem;
+    }
+    
+    .button-row {
+        flex-direction: column;
+    }
+    
+    .button-row button {
+        width: 100%;
     }
 }

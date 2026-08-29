@@ -1,17 +1,17 @@
-window.addEventListener('DOMContentLoaded', () => {
-    let brain;
+window.addEventListener('DOMContentLoaded', async () => {
+    let classifier;
     let trained = false;
-    let datasetByLabel = {}; // Track images per leaf type
+    let datasetByLabel = {};
     let testImgElement = null;
     let totalImagesLoaded = 0;
     
-    const options = {
-        task: 'classification',
-        debug: false
-    };
+    console.log('Loading pre-trained model...');
+    document.getElementById('trainStatus').innerText = "Loading pre-trained model...";
     
-    brain = ml5.neuralNetwork(options);
-    console.log('Neural Network Ready!');
+    classifier = ml5.imageClassifier('MobileNet', () => {
+        console.log('Base model loaded!');
+        document.getElementById('trainStatus').innerText = "Status: Ready for dataset.";
+    });
     
     // === PART 1: MULTI-IMAGE DATASET INPUT ===
     document.getElementById('addImagesBtn').addEventListener('click', () => {
@@ -27,7 +27,6 @@ window.addEventListener('DOMContentLoaded', () => {
             return;
         }
         
-        // Initialize this leaf type if new
         if (!datasetByLabel[label]) {
             datasetByLabel[label] = 0;
         }
@@ -42,35 +41,11 @@ window.addEventListener('DOMContentLoaded', () => {
             img.src = URL.createObjectURL(file);
             
             img.onload = () => {
-                // Resize to 64x64
-                const canvas = document.createElement('canvas');
-                canvas.width = 64;
-                canvas.height = 64;
-                const ctx = canvas.getContext('2d');
-                ctx.drawImage(img, 0, 0, 64, 64);
-                
-                // Convert to pixel array
-                const imgData = ctx.getImageData(0, 0, 64, 64).data;
-                const pixelArray = Array.from(imgData).map(val => val / 255);
-                
-                // Create input object
-                const dataInputs = {};
-                pixelArray.forEach((val, i) => {
-                    dataInputs[`pixel_${i}`] = val;
-                });
-                
-                // Create output object
-                const dataOutputs = {
-                    label: label
-                };
-                
-                // Add to brain
-                brain.addData(dataInputs, dataOutputs);
+                classifier.addImage(img, label);
                 datasetByLabel[label]++;
                 totalImagesLoaded++;
                 processedCount++;
                 
-                // Update UI when done
                 if (processedCount === filesArray.length) {
                     document.getElementById('loadingFeedback').innerText = `✅ Added ${filesArray.length} images!`;
                     updateProgress();
@@ -100,40 +75,32 @@ window.addEventListener('DOMContentLoaded', () => {
         }
         
         let totalImages = Object.values(datasetByLabel).reduce((a, b) => a + b, 0);
-        if (totalImages < 10) {
-            alert(`You have ${totalImages} images. Try to get at least 10 total!`);
+        
+        for (const [label, count] of Object.entries(datasetByLabel)) {
+            if (count < 2) {
+                alert(`${label} only has ${count} photo(s). Please add at least 2 per leaf type!`);
+                return;
+            }
+        }
+        
+        if (totalImages < 6) {
+            alert(`You have ${totalImages} images. Try to get at least 6 total!`);
             return;
         }
         
-        if (totalImagesLoaded === 0) {
-            alert("Please add some images to the brain before training!");
-            return;
-        }
-        
-        document.getElementById('trainStatus').innerText = "Initializing engine... please wait.";
+        document.getElementById('trainStatus').innerText = "🔄 Training... this takes 5-15 seconds!";
         
         try {
-            // Initialize TensorFlow backend FIRST
-            if (ml5.tf && ml5.tf.ready) {
-                await ml5.tf.ready();
-            }
+            await classifier.train(function(loss) {
+                console.log('Training loss:', loss);
+            });
             
-            document.getElementById('trainStatus').innerText = "Training... this takes 10-30 seconds!";
-            brain.normalizeData();
-            const trainingOptions = { epochs: 30 };
-            brain.train(trainingOptions, whileTraining, finishedTraining);
+            finishedTraining();
         } catch (error) {
-            console.error("Training engine error, attempting fallback...", error);
-            brain.normalizeData();
-            brain.train({ epochs: 250 }, whileTraining, finishedTraining);
+            console.error("Training error:", error);
+            document.getElementById('trainStatus').innerText = "❌ Training failed. Try again!";
         }
     });
-    
-    function whileTraining(epoch, loss) {
-        if (epoch % 5 === 0) {
-            console.log(`Epoch: ${epoch} - Loss: ${loss.loss.toFixed(3)}`);
-        }
-    }
     
     function finishedTraining() {
         document.getElementById('trainStatus').innerText = "✅ Training complete! Ready to identify leaves!";
@@ -143,7 +110,6 @@ window.addEventListener('DOMContentLoaded', () => {
     // === PART 3: PREVIEW THE TEST IMAGE ===
     document.getElementById('testLoader').addEventListener('change', (e) => {
         if (e.target.files && e.target.files.length > 0) {
-            // FIX: Grabbed the single file explicitly via index [0] to stop the crash
             const file = e.target.files[0];
             const previewDiv = document.getElementById('imagePreview');
             previewDiv.innerHTML = '';
@@ -154,34 +120,20 @@ window.addEventListener('DOMContentLoaded', () => {
         }
     });
     
-    // === PART 4: IDENTIFY THE LEAF ===
+    // === PART 4: IDENTIFY LEAF ===
     document.getElementById('predictBtn').addEventListener('click', async () => {
         if (!trained) {
-            alert("Train the model first or load a saved model!");
+            alert("Train the model first!");
             return;
         }
         if (!testImgElement) {
-            alert("Please upload a test leaf image first.");
+            alert("Upload a test leaf image first!");
             return;
         }
         
-        const canvas = document.createElement('canvas');
-        const ctx = canvas.getContext('2d');
-        canvas.width = 64;
-        canvas.height = 64;
-        ctx.drawImage(testImgElement, 0, 0, 64, 64);
-        
-        const imgData = ctx.getImageData(0, 0, 64, 64).data;
-        const testPixelArray = Array.from(imgData).map(val => val / 255);
-        
-        const testInputs = {};
-        testPixelArray.forEach((val, i) => {
-            testInputs[`pixel_${i}`] = val;
-        });
-        
         try {
-            const results = await brain.classify(testInputs);
-            console.log("Classification results:", results);
+            const results = await classifier.predict(testImgElement);
+            console.log("Prediction results:", results);
             
             if (results && results.length > 0) {
                 const topResult = results[0];
@@ -200,28 +152,30 @@ window.addEventListener('DOMContentLoaded', () => {
                 
                 document.getElementById('result').innerHTML = message;
             }
-        } catch (err) {
-            console.error("Classification error:", err);
-            document.getElementById('result').innerHTML = "❌ Classification failed. Try training with more images!";
+        } catch (error) {
+            console.error("Prediction error:", error);
+            document.getElementById('result').innerHTML = "❌ Error identifying leaf. Try again!";
         }
     });
     
-    // === PART 5: BACKUP SAVES ===
+    // === PART 5: SAVE / LOAD ===
     document.getElementById('saveModelBtn').addEventListener('click', () => {
         if (!trained) {
-            alert("Train your model before trying to save it!");
+            alert("Train your model first!");
             return;
         }
-        brain.save();
+        classifier.save();
         document.getElementById('trainStatus').innerText = "💾 Brain downloaded!";
     });
     
-    // === PART 6: RESTORING PROGRESS ===
-    document.getElementById('loadModelBtn').addEventListener('click', () => {
-        brain.load(null, () => {
+    document.getElementById('loadModelBtn').addEventListener('click', async () => {
+        try {
+            await classifier.load();
             document.getElementById('trainStatus').innerText = "✅ Brain loaded! Ready to identify!";
             trained = true;
-            document.getElementById('result').innerHTML = '';
-        });
+        } catch (error) {
+            console.error("Load error:", error);
+            alert("No saved model found. Train a new one first!");
+        }
     });
 });

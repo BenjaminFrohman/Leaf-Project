@@ -6,17 +6,16 @@
     <title>Leaf Vibe ID</title>
     <link rel="stylesheet" href="style.css">
     <script src="https://unpkg.com/ml5@latest/dist/ml5.min.js"></script>
-    <script src="script.js"></script>
 </head>
 <body>
     <div class="container">
         <h1>🍃 Leaf Vibe ID</h1>
-        <p style="text-align: center; color: #666;">Find leaves outside, take pictures, teach the AI!</p>
+        <p style="text-align: center; color: #666;">Find leaves, snap photos, teach the AI! Only 3-5 photos per leaf type needed.</p>
 
         <!-- PART 1: DATASET COLLECTION -->
         <div class="card">
             <h2>📸 Step 1: Collect Leaf Photos</h2>
-            <p class="small-text">Type a leaf name, then upload 8-15 photos of that leaf type</p>
+            <p class="small-text">Type a leaf name, then upload 3-5 photos of that leaf type</p>
             
             <input type="text" id="labelInput" placeholder="Leaf name (e.g., Oak, Maple)" maxlength="20">
             <input type="file" id="imageLoader" multiple accept="image/*">
@@ -31,7 +30,7 @@
         <!-- PART 2: TRAINING -->
         <div class="card">
             <h2>🧠 Step 2: Train the AI</h2>
-            <p class="small-text">Click when you've added at least 2 different leaf types</p>
+            <p class="small-text">Click when you've added at least 2 different leaf types (3+ photos each)</p>
             <button id="trainBtn" class="secondary-btn">Train Model</button>
             <div id="trainStatus" class="feedback-text">Status: Awaiting data...</div>
         </div>
