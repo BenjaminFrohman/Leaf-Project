@@ -2,53 +2,60 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Leaf Vibe ID</title>
     <link rel="stylesheet" href="style.css">
-    
-    <!-- 1. CORE FIX: Fetching the stable ML5 Next-Gen library straight from the official CDN -->
-    <script src="https://unpkg.com/ml5@1.2.1/dist/ml5.min.js"></script>
-    
-    <!-- 2. Load your custom training configurations -->
-    <script src="script.js" defer></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/ml5js/0.12.0/ml5.min.js"></script>
 </head>
 <body>
+    <div class="container">
+        <h1>🍃 Leaf Vibe ID</h1>
+        <p style="text-align: center; color: #666;">Find leaves outside, take pictures, teach the AI!</p>
 
-    <main class="container">
-        <h1>🍃 Leaf ID Collective</h1>
-        
-        <!-- Section A: Data Input (Training) -->
-        <section class="card">
-            <h2>1. Feed the Dataset</h2>
-            <input type="text" id="labelInput" placeholder="Leaf label (e.g., Maple)">
-            <input type="file" id="imageLoader" accept="image/*" multiple>
+        <!-- PART 1: DATASET COLLECTION -->
+        <div class="card">
+            <h2>📸 Step 1: Collect Leaf Photos</h2>
+            <p class="small-text">Type a leaf name, then upload 8-15 photos of that leaf type</p>
             
-            <!-- Real-time feedback container -->
-            <div id="loadingFeedback" class="feedback-text">Images loaded: 0</div>
+            <input type="text" id="labelInput" placeholder="Leaf name (e.g., Oak, Maple)" maxlength="20">
+            <input type="file" id="imageLoader" multiple accept="image/*">
+            <button id="addImagesBtn">Add These Leaves to Brain</button>
             
-            <button id="addImagesBtn">Add to Brain</button>
-            <button id="trainBtn" class="special">Train Model</button>
-            <p id="trainStatus">Status: Awaiting data...</p>
-        </section>
+            <div id="loadingFeedback" class="feedback-text"></div>
+            
+            <!-- Show progress per leaf type -->
+            <div id="datasetProgress" style="margin-top: 1rem;"></div>
+        </div>
 
-        <!-- Section B: Identification (Testing) -->
-        <section class="card">
-            <h2>2. Identify New Leaf</h2>
+        <!-- PART 2: TRAINING -->
+        <div class="card">
+            <h2>🧠 Step 2: Train the AI</h2>
+            <p class="small-text">Click when you've added at least 2 different leaf types</p>
+            <button id="trainBtn" class="secondary-btn">Train Model</button>
+            <div id="trainStatus" class="feedback-text">Status: Awaiting data...</div>
+        </div>
+
+        <!-- PART 3: TESTING -->
+        <div class="card">
+            <h2>🔍 Step 3: Identify a New Leaf</h2>
+            <p class="small-text">Upload a photo of a leaf you haven't trained on yet</p>
             <input type="file" id="testLoader" accept="image/*">
             <div id="imagePreview"></div>
-            <button id="predictBtn">Identify</button>
-            <h3 id="result">Result: Unknown</h3>
-        </section>
+            <button id="predictBtn">What Leaf Is This?</button>
+            <div id="result" class="feedback-text" style="margin-top: 1rem;"></div>
+        </div>
 
-        <!-- Section C: Save & Load Brain Progress -->
-        <section class="card backup-zone">
-            <h2>📦 Save / Load Your Brain</h2>
-            <p class="small-text">Download your trained model or resume a saved session.</p>
+        <!-- PART 4: SAVES -->
+        <div class="card backup-zone">
+            <h2>💾 Save Your Work</h2>
+            <p class="small-text">Download your trained AI brain or upload a saved one</p>
             <div class="button-row">
                 <button id="saveModelBtn" class="secondary-btn">Download Brain</button>
                 <button id="loadModelBtn" class="secondary-btn">Upload Brain</button>
             </div>
-        </section>
-    </main>
+        </div>
+    </div>
 
+    <script src="script.js"></script>
 </body>
 </html>

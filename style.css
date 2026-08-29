@@ -2,17 +2,17 @@
     --bg-color: #f4f7f5;
     --card-bg: #ffffff;
     --text-main: #2d3e35;
-    --accent: #6b8e23; /* Olive green */
+    --accent: #6b8e23;
     --accent-hover: #55721a;
 }
 
 body {
     background-color: var(--bg-color);
     color: var(--text-main);
-    font-family: 'Courier New', Courier, monospace; /* Lo-fi / Retro vibe */
+    font-family: 'Courier New', Courier, monospace;
     display: flex;
     justify-content: center;
-    padding: 2rem;
+    padding: 2rem 1rem;
 }
 
 .container {
@@ -20,9 +20,17 @@ body {
     width: 100%;
 }
 
-h1 {
+h1, h2 {
     text-align: center;
-    letter-spacing: -1px;
+}
+
+h2 {
+    font-size: 1.3rem;
+    margin-top: 0;
+}
+
+p {
+    margin: 0.5rem 0;
 }
 
 .card {
@@ -37,11 +45,13 @@ h1 {
 input, button {
     display: block;
     width: 100%;
-    margin: 1rem 0;
+    margin: 0.8rem 0;
     padding: 0.8rem;
     border-radius: 8px;
     border: 1px solid #ccc;
     box-sizing: border-box;
+    font-family: inherit;
+    font-size: 1rem;
 }
 
 button {
@@ -57,11 +67,34 @@ button:hover {
     background: var(--accent-hover);
 }
 
-.special {
-    background: #2d3e35;
+button:active {
+    transform: scale(0.98);
 }
-.special:hover {
-    background: #1a2620;
+
+.secondary-btn {
+    background: #6c757d;
+}
+
+.secondary-btn:hover {
+    background: #5a6268;
+}
+
+.feedback-text {
+    font-size: 0.9rem;
+    color: #2d3e35;
+    font-weight: bold;
+    margin: 1rem 0;
+    text-align: center;
+    background: rgba(107, 142, 35, 0.15);
+    padding: 0.8rem;
+    border-radius: 6px;
+    border-left: 4px solid var(--accent);
+}
+
+.small-text {
+    font-size: 0.85rem;
+    color: #666;
+    margin: -0.5rem 0 1rem 0;
 }
 
 #imagePreview img {
@@ -70,28 +103,9 @@ button:hover {
     margin-top: 1rem;
 }
 
-/* New style additions for feedback and saves */
-.feedback-text {
-    font-size: 0.9rem;
-    color: #55721a;
-    font-weight: bold;
-    margin: 0.5rem 0;
-    text-align: center;
-    background: rgba(107, 142, 35, 0.1);
-    padding: 0.4rem;
-    border-radius: 6px;
-}
-
 .backup-zone {
-    border: 1px dashed var(--accent);
+    border: 2px dashed var(--accent);
     background: #fafcfb;
-}
-
-.small-text {
-    font-size: 0.8rem;
-    color: #666;
-    margin-top: -0.5rem;
-    margin-bottom: 1rem;
 }
 
 .button-row {
@@ -99,9 +113,28 @@ button:hover {
     gap: 1rem;
 }
 
-.secondary-btn {
-    background: #6c757d;
+.button-row button {
+    flex: 1;
 }
-.secondary-btn:hover {
-    background: #5a6268;
+
+#datasetProgress {
+    font-size: 0.9rem;
+    background: #f0f5e8;
+    padding: 0.8rem;
+    border-radius: 6px;
+    line-height: 1.6;
+}
+
+#result {
+    line-height: 1.8;
+}
+
+@media (max-width: 500px) {
+    body {
+        padding: 1rem;
+    }
+    
+    .card {
+        padding: 1.5rem;
+    }
 }
