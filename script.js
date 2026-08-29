@@ -155,7 +155,7 @@ window.addEventListener('DOMContentLoaded', () => {
     });
     
     // === PART 4: IDENTIFY THE LEAF ===
-    document.getElementById('predictBtn').addEventListener('click', () => {
+    document.getElementById('predictBtn').addEventListener('click', async () => {
         if (!trained) {
             alert("Train the model first or load a saved model!");
             return;
@@ -179,14 +179,9 @@ window.addEventListener('DOMContentLoaded', () => {
             testInputs[`pixel_${i}`] = val;
         });
         
-        brain.classify(testInputs, (err, results) => {
+        try {
+            const results = await brain.classify(testInputs);
             console.log("Classification results:", results);
-            
-            if (err) {
-                console.error("Classification error:", err);
-                document.getElementById('result').innerHTML = "❌ Error classifying image";
-                return;
-            }
             
             if (results && results.length > 0) {
                 const topResult = results[0];
@@ -204,10 +199,11 @@ window.addEventListener('DOMContentLoaded', () => {
                 }
                 
                 document.getElementById('result').innerHTML = message;
-            } else {
-                document.getElementById('result').innerHTML = "⚠️ No results returned. Try training with more images!";
             }
-        });
+        } catch (err) {
+            console.error("Classification error:", err);
+            document.getElementById('result').innerHTML = "❌ Classification failed. Try training with more images!";
+        }
     });
     
     // === PART 5: BACKUP SAVES ===
